@@ -20,10 +20,18 @@ from django.views.generic import RedirectView
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='/departments/')),  # redirect homepage
-    path('', include('hrm_app.urls')),
+    # Auth URLs
     path('login/', auth_views.LoginView.as_view(template_name='hrm_app/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    
+    # Admin URL
+    path('admin/', admin.site.urls),
+    
+    # App URLs
+    path('', include('hrm_app.urls')),
+    
+    # Redirect root to departments
+    path('', RedirectView.as_view(url='/departments/', permanent=False)),
 ]
+
 
