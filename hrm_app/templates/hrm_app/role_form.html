@@ -1,0 +1,72 @@
+{% extends 'hrm_app/base.html' %}
+{% block content %}
+<style>
+    .form-container {
+        max-width: 520px;
+        margin: 0 auto;
+    }
+    .card-header.bg-gradient {
+        background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%) !important;
+    }
+    .form-control:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 0.2rem rgba(37,99,235,.15);
+    }
+    .input-group-text {
+        background: #f1f5f9;
+        border-right: 0;
+    }
+</style>
+<div class="form-container">
+    <div class="card shadow-lg mt-4 border-0">
+        <div class="card-header bg-gradient text-white">
+            <h4 class="mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-person-badge"></i>
+                {{ title }}
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" autocomplete="off">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="id_role_name" class="form-label fw-semibold">Role Name</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-type"></i></span>
+                        {{ form.role_name }}
+                    </div>
+                    {% if form.role_name.errors %}
+                        <div class="text-danger small mt-1">{{ form.role_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-4">
+                    <label for="id_description" class="form-label fw-semibold">Description</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                        {{ form.description }}
+                    </div>
+                    {% if form.description.errors %}
+                        <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-4">
+                    <label for="id_status" class="form-label fw-semibold">Status</label>
+                    <div>
+                        {{ form.status }}
+                    </div>
+                    {% if form.status.errors %}
+                        <div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'role_list' %}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
+                        <i class="bi bi-save"></i> Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

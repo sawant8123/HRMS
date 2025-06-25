@@ -8,5 +8,11 @@ urlpatterns = [
     path('departments/create/', views.department_create, name='department_create'),
     path('departments/<int:pk>/update/', views.department_update, name='department_update'),
     path('departments/<int:pk>/delete/', views.department_delete, name='department_delete'),
+    path('departments/<int:pk>/reactivate/', views.department_reactivate, name='department_reactivate'),
     path('login/', custom_login_view, name='login'),
+    path('roles/', views.role_list, name='role_list'),
+    path('roles/create/', views.role_create, name='role_create'),
+    path('roles/<int:pk>/edit/', views.role_update, name='role_update'),
+    path('roles/<int:pk>/delete/', views.role_delete, name='role_delete'),
+    path('roles/<int:pk>/reactivate/', views.role_reactivate, name='role_reactivate'),
 ]
