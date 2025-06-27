@@ -62,7 +62,8 @@
                         <i class="bi bi-arrow-left"></i> Cancel
                     </a>
                     <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
-                        <i class="bi bi-save"></i> Save
+                        <i class="bi bi-save"></i>
+                        {% if title == "Edit Role" %}Update{% else %}Save{% endif %}
                     </button>
                 </div>
             </form>

@@ -1,5 +1,5 @@
 from .models import Role
-
+ 
 class RoleForm(forms.ModelForm):
     class Meta:
         model = Role

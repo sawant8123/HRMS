@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django import forms
-from .models import Department, Role
+from .models import Department, Role, User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.urls import reverse
+from django.db.models import Q
 
 # Create your views here.
 
@@ -23,6 +24,29 @@ class InlineRoleForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-control rounded-start px-3 py-2', 'rows': 3}),
             'status': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+# Inline User form
+class InlineUserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'password', 'email', 'mobile', 'dept', 'role', 'reporting_manager', 'date_of_joining']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'password': forms.PasswordInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'mobile': forms.TextInput(attrs={'class': 'form-control'}),
+            'dept': forms.Select(attrs={'class': 'form-select'}),
+            'role': forms.Select(attrs={'class': 'form-select'}),
+            'reporting_manager': forms.Select(attrs={'class': 'form-select'}),
+            'date_of_joining': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['role'].empty_label = 'Select Role'
+        self.fields['dept'].empty_label = 'Select Department'
+        self.fields['reporting_manager'].empty_label = 'Select Reporting Manager'
 
 # Only allow admin
 admin_required = user_passes_test(lambda u: u.is_superuser)
@@ -169,3 +193,61 @@ def role_reactivate(request, pk):
     messages.success(request, 'Role reactivated successfully.')
     # Redirect to active filter
     return redirect('/roles/?active=1')
+
+# Only admin or HR (role name 'Admin' or 'HR')
+def admin_or_hr_required(view_func):
+    def _wrapped_view(request, *args, **kwargs):
+        if request.user.is_superuser or (hasattr(request.user, 'user') and request.user.user.role and request.user.user.role.role_name in ['Admin', 'HR']):
+            return view_func(request, *args, **kwargs)
+        return redirect('department_list')
+    return login_required(_wrapped_view)
+
+@admin_or_hr_required
+def employee_list(request):
+    search_query = request.GET.get('search', '').strip()
+    employees = User.objects.filter(status=True)
+    if search_query:
+        employees = employees.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(username__icontains=search_query)
+        )
+    return render(request, 'hrm_app/employee_list.html', {
+        'employees': employees,
+        'search_query': search_query,
+    })
+
+@admin_or_hr_required
+def employee_create(request):
+    if request.method == 'POST':
+        form = InlineUserForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Employee added successfully.')
+            return redirect('employee_list')
+    else:
+        form = InlineUserForm()
+    return render(request, 'hrm_app/employee_form.html', {'form': form, 'title': 'Add Employee'})
+
+@admin_or_hr_required
+def employee_update(request, pk):
+    employee = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        form = InlineUserForm(request.POST, instance=employee)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Employee updated successfully.')
+            return redirect('employee_list')
+    else:
+        form = InlineUserForm(instance=employee)
+    return render(request, 'hrm_app/employee_form.html', {'form': form, 'title': 'Edit Employee'})
+
+@admin_or_hr_required
+def employee_delete(request, pk):
+    employee = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        employee.status = False  # Soft delete
+        employee.save()
+        messages.warning(request, 'Employee marked as inactive.')
+        return redirect('employee_list')
+    return render(request, 'hrm_app/employee_confirm_delete.html', {'employee': employee})
