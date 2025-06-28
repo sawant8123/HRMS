@@ -1,0 +1,410 @@
+{% extends 'hrm_app/base.html' %}
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 text-primary">
+                        <i class="fas fa-chart-line me-2"></i>Performance Reviews
+                    </h2>
+                    <p class="text-muted mb-0">Manage and track employee performance reviews</p>
+                </div>
+                <a href="{% url 'review_create' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Add New Review
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-calendar-alt text-primary fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-1">Monthly Reviews</h6>
+                            <h3 class="mb-0 text-primary">{{ stats.monthly }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-chart-bar text-success fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-1">Quarterly Reviews</h6>
+                            <h3 class="mb-0 text-success">{{ stats.quarterly }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-star text-warning fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-1">Annual Reviews</h6>
+                            <h3 class="mb-0 text-warning">{{ stats.annual }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-users text-info fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-1">Total Reviews</h6>
+                            <h3 class="mb-0 text-info">{{ page_obj.paginator.count }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-filter me-2 text-primary"></i>Filters & Search
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label fw-bold">Search Employee</label>
+                    <form method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control" placeholder="Search by name..." value="{{ request.GET.search }}">
+                        <button type="submit" class="btn btn-outline-primary ms-2">
+                            <i class="fas fa-search"></i>Search
+                        </button>
+                    </form>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label fw-bold">Filter by Employee</label>
+                    <form method="get" id="employeeFilterForm">
+                        <select name="employee" class="form-select" onchange="this.form.submit();">
+                            <option value="">All Employees</option>
+                            {% for emp in employees %}
+                                <option value="{{ emp.id }}" {% if request.GET.employee == emp.id|stringformat:'s' %}selected{% endif %}>
+                                    {{ emp.first_name }} {{ emp.last_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label fw-bold">Filter by Period</label>
+                    <div class="btn-group w-100" role="group">
+                        <a href="?period=Monthly" class="btn btn-outline-primary {% if request.GET.period == 'Monthly' %}active{% endif %}">Monthly</a>
+                        <a href="?period=Quarterly" class="btn btn-outline-primary {% if request.GET.period == 'Quarterly' %}active{% endif %}">Quarterly</a>
+                        <a href="?period=Annual" class="btn btn-outline-primary {% if request.GET.period == 'Annual' %}active{% endif %}">Annual</a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label fw-bold">Filter by Rating</label>
+                    <div class="btn-group w-100" role="group">
+                        <a href="?rating=1-5" class="btn btn-outline-warning {% if request.GET.rating == '1-5' %}active{% endif %}">1-5</a>
+                        <a href="?rating=6-8" class="btn btn-outline-info {% if request.GET.rating == '6-8' %}active{% endif %}">6-8</a>
+                        <a href="?rating=9+" class="btn btn-outline-success {% if request.GET.rating == '9+' %}active{% endif %}">9+</a>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-lg-6">
+                    <label class="form-label fw-bold">Date Range</label>
+                    <form method="get" id="dateFilterForm" class="row g-2">
+                        <div class="col-6">
+                            <input type="date" name="from_date" class="form-control" placeholder="From Date" value="{{ request.GET.from_date }}" onchange="this.form.submit();">
+                        </div>
+                        <div class="col-6">
+                            <input type="date" name="to_date" class="form-control" placeholder="To Date" value="{{ request.GET.to_date }}" onchange="this.form.submit();">
+                        </div>
+                    </form>
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label fw-bold">Department</label>
+                    <form method="get" class="d-flex">
+                        <select name="department" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept.name }}" {% if request.GET.department == dept.name %}selected{% endif %}>{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <a href="{% url 'review_dashboard' %}" class="btn btn-outline-secondary ms-2" title="Clear Filters">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2 text-primary"></i>Performance Reviews
+            </h5>
+            <span class="badge bg-primary">{{ page_obj.paginator.count }} Total Reviews</span>
+        </div>
+        <div class="card-body p-0">
+            {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0">#</th>
+                            <th class="border-0">Employee</th>
+                            <th class="border-0">Review Title</th>
+                            <th class="border-0">Date</th>
+                            <th class="border-0">Period</th>
+                            <th class="border-0">Rating</th>
+                            <th class="border-0 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for review in page_obj %}
+                        <tr>
+                            <td class="align-middle">
+                                <span class="badge bg-light text-dark">{{ forloop.counter }}</span>
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                        <i class="fas fa-user text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ review.employee.first_name }} {{ review.employee.last_name }}</h6>
+                                        {% if review.employee.department %}
+                                            <small class="text-muted">{{ review.employee.department.name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="align-middle">
+                                <strong>{{ review.review_title }}</strong>
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-calendar me-1"></i>{{ review.review_date }}
+                                </span>
+                            </td>
+                            <td class="align-middle">
+                                {% if review.review_period == 'Monthly' %}
+                                    <span class="badge bg-primary">Monthly</span>
+                                {% elif review.review_period == 'Quarterly' %}
+                                    <span class="badge bg-success">Quarterly</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Annual</span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        {% if review.rating >= 9 %}
+                                            <span class="badge bg-success">{{ review.rating }}/10</span>
+                                        {% elif review.rating >= 6 %}
+                                            <span class="badge bg-info">{{ review.rating }}/10</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ review.rating }}/10</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-warning">
+                                        {% for i in "12345678910"|make_list %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="align-middle text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'review_detail' review.pk %}" class="btn btn-info btn-sm me-1" title="View Details" data-bs-toggle="tooltip">
+                                        <i class="fas fa-eye"></i>See Comments
+                                    </a>
+                                    <a href="{% url 'review_update' review.pk %}" class="btn btn-warning btn-sm me-1" title="Edit" data-bs-toggle="tooltip">
+                                        <i class="fas fa-edit"></i>Edit
+                                    </a>
+                                    <a href="{% url 'review_delete' review.pk %}" class="btn btn-danger btn-sm" title="Delete" data-bs-toggle="tooltip">
+                                        <i class="fas fa-trash"></i>Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-inbox fa-3x text-muted"></i>
+                </div>
+                <h5 class="text-muted">No reviews found</h5>
+                <p class="text-muted">Start by adding a new performance review.</p>
+                <a href="{% url 'review_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add First Review
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Reviews pagination">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+
+    <!-- Rating Statistics -->
+    <div class="row mt-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2 text-primary"></i>Rating Distribution
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-warning mb-1">{{ stats.rating_1_5 }}</h4>
+                                <small class="text-muted">Rating 1-5</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-info mb-1">{{ stats.rating_6_8 }}</h4>
+                                <small class="text-muted">Rating 6-8</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-success mb-1">{{ stats.rating_9_plus }}</h4>
+                            <small class="text-muted">Rating 9+</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h6 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2 text-primary"></i>Period Distribution
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-1">{{ stats.monthly }}</h4>
+                                <small class="text-muted">Monthly</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h4 class="text-success mb-1">{{ stats.quarterly }}</h4>
+                                <small class="text-muted">Quarterly</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-warning mb-1">{{ stats.annual }}</h4>
+                            <small class="text-muted">Annual</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+.btn-group .btn {
+    border-radius: 0.375rem !important;
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(0,123,255,0.05);
+}
+.badge {
+    font-size: 0.75em;
+}
+</style>
+
+<script>
+// Enable Bootstrap tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+</script>
+{% endblock %} 

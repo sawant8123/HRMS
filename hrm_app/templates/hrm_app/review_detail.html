@@ -1,0 +1,27 @@
+{% extends 'hrm_app/base.html' %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm p-4">
+                <h3 class="mb-4">Review Details</h3>
+                <dl class="row">
+                    <dt class="col-sm-3">Review Title:</dt>
+                    <dd class="col-sm-9">{{ review.review_title }}</dd>
+                    <dt class="col-sm-3">Review Date:</dt>
+                    <dd class="col-sm-9">{{ review.review_date }}</dd>
+                    <dt class="col-sm-3">Employee:</dt>
+                    <dd class="col-sm-9">{{ review.employee.first_name }} {{ review.employee.last_name }}</dd>
+                    <dt class="col-sm-3">Review Period:</dt>
+                    <dd class="col-sm-9">{{ review.review_period }}</dd>
+                    <dt class="col-sm-3">Rating:</dt>
+                    <dd class="col-sm-9">{{ review.rating }}</dd>
+                    <dt class="col-sm-3">Comments:</dt>
+                    <dd class="col-sm-9">{{ review.comments }}</dd>
+                </dl>
+                <a href="{% url 'review_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

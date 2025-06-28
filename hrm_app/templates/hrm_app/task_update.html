@@ -1,0 +1,48 @@
+{% extends 'hrm_app/base.html' %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4">
+                <h3 class="mb-4">Update Task</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Task Title:</label>
+                        {{ form.task_title }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Enter Task Description:</label>
+                        {{ form.task_description }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Task priority:</label>
+                        {{ form.task_priority }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Assigned To:</label>
+                        {{ assignment_form.employee }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Start date:</label>
+                        {{ form.start_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">End date:</label>
+                        {{ form.end_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Task Type:</label>
+                        {{ form.task_type }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status:</label>
+                        {{ assignment_form.status }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

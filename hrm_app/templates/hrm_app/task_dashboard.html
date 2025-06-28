@@ -1,0 +1,154 @@
+{% extends 'hrm_app/base.html' %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <a href="{% url 'task_create' %}" class="btn btn-primary">Create Task</a>
+            <a href="#" class="btn btn-info">Leave Management</a>
+            <a href="{% url 'review_dashboard' %}" class="btn btn-primary">Performance Review</a>
+        </div>
+        <div>
+            <form method="get" class="d-inline">
+                <select name="department" class="form-select d-inline w-auto" onchange="this.form.submit()">
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.name }}" {% if request.GET.department == dept.name %}selected{% endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+    <div class="card p-3 mb-3">
+        <form method="get" class="row g-2 align-items-end" id="filterForm">
+            <div class="col-md-3">
+                <label>Filter by Employee</label>
+                <select name="employee" class="form-select" onchange="document.getElementById('filterForm').submit();">
+                    <option value="">Select Employee</option>
+                    {% for emp in employees %}
+                        <option value="{{ emp.id }}" {% if request.GET.employee == emp.id|stringformat:'s' %}selected{% endif %}>{{ emp.first_name }} {{ emp.last_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label>Filter by Status</label>
+                <select name="status" class="form-select" onchange="document.getElementById('filterForm').submit();">
+                    <option value="">All</option>
+                    <option value="Pending" {% if request.GET.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="In progress" {% if request.GET.status == 'In progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Completed" {% if request.GET.status == 'Completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label>From</label>
+                <input type="date" name="from_date" class="form-control" value="{{ request.GET.from_date }}" onchange="document.getElementById('filterForm').submit();">
+            </div>
+            <div class="col-md-3">
+                <label>To</label>
+                <input type="date" name="to_date" class="form-control" value="{{ request.GET.to_date }}" onchange="document.getElementById('filterForm').submit();">
+            </div>
+        </form>
+    </div>
+    <div class="card p-3 mb-3">
+        <div class="row">
+            <div class="col-md-8">
+                <table class="table table-bordered align-middle">
+                    <thead>
+                        <tr>
+                            <th>Sr.No</th>
+                            <th>Employee Name</th>
+                            <th>Task Title</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>See Details</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in page_obj %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ assignment.employee.first_name }} {{ assignment.employee.last_name }}</td>
+                            <td>{{ assignment.task.task_title }}</td>
+                            <td>{{ assignment.task.start_date }}</td>
+                            <td>{{ assignment.task.end_date }}</td>
+                            <td><a href="{% url 'task_detail' assignment.pk %}" class="btn btn-info btn-sm">See Details</a></td>
+                            <td>
+                                {% if assignment.status == 'Pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif assignment.status == 'Completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-primary">In Progress</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if assignment.status != 'Completed' %}
+                                    <a href="{% url 'task_update' assignment.pk %}" class="btn btn-success btn-sm">Mark Completed</a>
+                                {% endif %}
+                            </td>
+                            <td><a href="{% url 'task_update' assignment.pk %}" class="btn btn-warning btn-sm">Edit</a></td>
+                            <td><a href="{% url 'task_delete' assignment.pk %}" class="btn btn-danger btn-sm">Delete</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="10" class="text-center">No tasks found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <nav>
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5>Task Statistics</h5>
+                        <p>Total Tasks: <b>{{ total }}</b></p>
+                        <p>Completed: <span class="text-success fw-bold">{{ completed }}</span></p>
+                        <p>In progress: <span class="text-primary fw-bold">{{ in_progress }}</span></p>
+                        <p>Pending: <span class="text-warning fw-bold">{{ pending }}</span></p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <canvas id="taskChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var ctx = document.getElementById('taskChart').getContext('2d');
+    var taskChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Task', 'Completed', 'Pending', 'In progress'],
+            datasets: [{
+                label: 'Task Statistics',
+                data: [{{ total }}, {{ completed }}, {{ pending }}, {{ in_progress }}],
+                backgroundColor: [
+                    '#ffc107', '#28a745', '#fd7e14', '#0d6efd'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - HRMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .login-body {
+            padding: 40px 30px;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .employee-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        .employee-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .employee-link a:hover {
+            text-decoration: underline;
+        }
+        .input-group-text {
+            background: transparent;
+            border: 2px solid #e9ecef;
+            border-right: none;
+        }
+        .form-control {
+            border-left: none;
+        }
+        .input-group:focus-within .input-group-text {
+            border-color: #667eea;
+        }
+        .input-group:focus-within .form-control {
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h2><i class="fas fa-user-shield me-2"></i> Login</h2>
+            
+        </div>
+        
+        <div class="login-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        {{ form.username }}
+                    </div>
+                    {% if form.username.errors %}
+                        <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        {{ form.password }}
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-login w-100">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login as Admin
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                    <i class="fas fa-key me-1"></i>Forgot your password?
+                </a>
+            </div>
+
+            <!-- Forgot Password Modal -->
+            <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel"><i class="fas fa-key me-2"></i>Reset Password</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form method="post" action="{% url 'password_reset_request' %}" id="forgotPasswordForm">
+                      {% csrf_token %}
+                      <div class="mb-3">
+                        <label for="resetEmail" class="form-label">Enter your registered email</label>
+                        <input type="email" class="form-control" id="resetEmail" name="email" placeholder="Email" required>
+                      </div>
+                      <button type="submit" class="btn btn-info w-100">Get New Password</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="employee-link">
+                <p class="mb-2">Are you an employee?</p>
+                <a href="{% url 'employee_login' %}">
+                    <i class="fas fa-users me-1"></i>Login as Employee
+                </a>
+                <span class="mx-2">|</span>
+                <a href="{% url 'employee_signup' %}">
+                    <i class="fas fa-user-plus me-1"></i>Sign Up
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Auto-dismiss alerts after 2 seconds
+      setTimeout(function() {
+        var alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+          var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+          bsAlert.close();
+        });
+      }, 2000);
+    </script>
+</body>
+</html> 

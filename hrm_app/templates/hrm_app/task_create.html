@@ -1,0 +1,70 @@
+{% extends 'hrm_app/base.html' %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4">
+                <h3 class="mb-4">Task Creation</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.errors or assignment_form.errors %}
+                      <div class="alert alert-danger">
+                        <ul class="mb-0">
+                          {% for field in form %}
+                            {% for error in field.errors %}
+                              <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                            {% endfor %}
+                          {% endfor %}
+                          {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                          {% endfor %}
+                          {% for field in assignment_form %}
+                            {% for error in field.errors %}
+                              <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                            {% endfor %}
+                          {% endfor %}
+                          {% for error in assignment_form.non_field_errors %}
+                            <li>{{ error }}</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">Task Title:</label>
+                        {{ form.task_title }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Enter Task Description:</label>
+                        {{ form.task_description }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Task priority:</label>
+                        {{ form.task_priority }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Assigned To:</label>
+                        {{ assignment_form.employee }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status:</label>
+                        {{ assignment_form.status }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Start date:</label>
+                        {{ form.start_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">End date:</label>
+                        {{ form.end_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Task Type:</label>
+                        {{ form.task_type }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

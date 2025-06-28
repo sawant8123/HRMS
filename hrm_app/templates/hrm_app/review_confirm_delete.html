@@ -1,0 +1,18 @@
+{% extends 'hrm_app/base.html' %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4">
+                <h4 class="mb-3">Delete Review</h4>
+                <p>Are you sure you want to delete the review <b>{{ review.review_title }}</b> for <b>{{ review.employee.first_name }} {{ review.employee.last_name }}</b>?</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                    <a href="{% url 'review_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
