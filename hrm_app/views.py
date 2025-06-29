@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django import forms
-from .models import Department, Role, User, Task, TaskAssignment, PerformanceReview
+from .models import Department, Role, User, Task, TaskAssignment, PerformanceReview, Leave, LeaveQuota
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
@@ -11,7 +11,7 @@ import random, string, datetime
 from django.utils import timezone
 from django.contrib.auth.forms import UserCreationForm
 from django.http import JsonResponse
-from .forms import PasswordResetRequestForm, OTPForm, SetNewPasswordForm, TaskForm, TaskAssignmentForm, PerformanceReviewForm
+from .forms import PasswordResetRequestForm, OTPForm, SetNewPasswordForm, TaskForm, TaskAssignmentForm, PerformanceReviewForm, LeaveForm, LeaveQuotaForm
 from django.core.paginator import Paginator
 from django.db.models import Count, Avg
 import logging
@@ -274,9 +274,21 @@ def employee_dashboard(request):
     if not request.user.is_employee:
         messages.error(request, 'Access denied. Employee privileges required.')
         return redirect('admin_login')
-    
+    user = request.user
+    # Get tasks assigned to this employee
+    tasks = TaskAssignment.objects.filter(employee=user).select_related('task')
+    # Get performance reviews for this employee
+    reviews = PerformanceReview.objects.filter(employee=user)
+    # Get leave quotas and leaves for this employee
+    quotas = LeaveQuota.objects.filter(employee=user)
+    quota_dict = {q.leave_type: q for q in quotas}
+    leaves = Leave.objects.filter(employee=user).order_by('-start_date')
     return render(request, 'hrm_app/employee_dashboard.html', {
-        'user': request.user
+        'user': user,
+        'tasks': tasks,
+        'reviews': reviews,
+        'quota_dict': quota_dict,
+        'leaves': leaves,
     })
 
 # Logout View
@@ -775,3 +787,96 @@ def review_delete(request, pk):
 def review_detail(request, pk):
     review = get_object_or_404(PerformanceReview, pk=pk)
     return render(request, 'hrm_app/review_detail.html', {'review': review})
+
+@login_required
+def employee_leave_dashboard(request):
+    if not request.user.is_employee:
+        messages.error(request, 'Access denied. Employee privileges required.')
+        return redirect('employee_dashboard')
+    # Get leave quotas for the employee
+    quotas = LeaveQuota.objects.filter(employee=request.user)
+    quota_dict = {q.leave_type: q for q in quotas}
+    # Get all leaves for the employee
+    leaves = Leave.objects.filter(employee=request.user).order_by('-start_date')
+    return render(request, 'hrm_app/leave_dashboard.html', {
+        'quota_dict': quota_dict,
+        'leaves': leaves,
+    })
+
+@login_required
+def apply_leave(request):
+    if not request.user.is_employee:
+        messages.error(request, 'Access denied. Employee privileges required.')
+        return redirect('employee_dashboard')
+    if request.method == 'POST':
+        form = LeaveForm(request.POST)
+        if form.is_valid():
+            leave = form.save(commit=False)
+            leave.employee = request.user
+            # Calculate total_days
+            leave.total_days = (leave.end_date - leave.start_date).days + 1
+            leave.save()
+            messages.success(request, 'Leave applied successfully!')
+            return redirect('employee_leave_dashboard')
+    else:
+        form = LeaveForm()
+    return render(request, 'hrm_app/leave_form.html', {'form': form, 'title': 'Apply Leave'})
+
+@login_required
+def edit_leave(request, leave_id):
+    leave = get_object_or_404(Leave, pk=leave_id, employee=request.user)
+    if not leave.is_editable():
+        messages.error(request, 'You can only edit pending leaves.')
+        return redirect('employee_leave_dashboard')
+    if request.method == 'POST':
+        form = LeaveForm(request.POST, instance=leave)
+        if form.is_valid():
+            leave = form.save(commit=False)
+            leave.total_days = (leave.end_date - leave.start_date).days + 1
+            leave.save()
+            messages.success(request, 'Leave updated successfully!')
+            return redirect('employee_leave_dashboard')
+    else:
+        form = LeaveForm(instance=leave)
+    return render(request, 'hrm_app/leave_form.html', {'form': form, 'title': 'Update Leave'})
+
+def admin_or_hr(user):
+    return user.is_superuser or (hasattr(user, 'role') and user.role and user.role.role_name in ['Admin', 'HR'])
+
+@user_passes_test(admin_or_hr)
+def admin_leave_dashboard(request):
+    if request.method == 'POST':
+        leave_id = request.POST.get('leave_id')
+        action = request.POST.get('action')
+        leave = get_object_or_404(Leave, pk=leave_id)
+        if action == 'approve':
+            leave.status = 'approved'
+            leave.approved_by = request.user
+            leave.save()
+            messages.success(request, f'Leave for {leave.employee} approved.')
+        elif action == 'reject':
+            leave.status = 'rejected'
+            leave.approved_by = request.user
+            leave.save()
+            messages.warning(request, f'Leave for {leave.employee} rejected.')
+        return redirect('admin_leave_dashboard')
+    leaves = Leave.objects.select_related('employee').all().order_by('-start_date')
+    return render(request, 'hrm_app/admin_leave_dashboard.html', {'leaves': leaves})
+
+@user_passes_test(admin_or_hr)
+def approve_leave(request, leave_id):
+    leave = Leave.objects.get(pk=leave_id)
+    if leave.status == 'pending':
+        leave.status = 'approved'
+        leave.approved_by = request.user
+        leave.save()
+    return redirect('admin_leave_dashboard')
+
+@user_passes_test(admin_or_hr)
+def reject_leave(request, leave_id):
+    leave = Leave.objects.get(pk=leave_id)
+    if leave.status == 'pending':
+        leave.status = 'rejected'
+        leave.approved_by = request.user
+        leave.save()
+    return redirect('admin_leave_dashboard')

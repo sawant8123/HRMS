@@ -1,4 +1,4 @@
-from .models import Role, Task, TaskAssignment, User, PerformanceReview
+from .models import Role, Task, TaskAssignment, User, PerformanceReview, Leave, LeaveQuota
 from django import forms
 
 class RoleForm(forms.ModelForm):
@@ -84,3 +84,24 @@ class PerformanceReviewForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)  # Pop user before calling super
         super().__init__(*args, **kwargs)
         self.fields['employee'].queryset = User.objects.filter(is_employee=True, status=True) 
+
+class LeaveForm(forms.ModelForm):
+    class Meta:
+        model = Leave
+        fields = ['leave_type', 'reason', 'start_date', 'end_date']
+        widgets = {
+            'leave_type': forms.Select(attrs={'class': 'form-control'}),
+            'reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Reason of Leave'}),
+            'start_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+
+class LeaveQuotaForm(forms.ModelForm):
+    class Meta:
+        model = LeaveQuota
+        fields = ['employee', 'leave_type', 'total_quota']
+        widgets = {
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'leave_type': forms.Select(attrs={'class': 'form-control'}),
+            'total_quota': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.5'}),
+        } 

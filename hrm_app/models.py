@@ -90,3 +90,55 @@ class PerformanceReview(models.Model):
 
     def __str__(self):
         return f"{self.review_title} ({self.employee}) - {self.review_period}"
+
+# --- Leave Management Models ---
+class Leave(models.Model):
+    LEAVE_TYPE_CHOICES = [
+        ('PL', 'Privilege Leave'),
+        ('CL', 'Casual Leave'),
+        ('SL', 'Sick Leave'),
+        ('LWP', 'Leave Without Pay'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('delete_requested', 'Delete Requested'),
+    ]
+    leaveid = models.AutoField(primary_key=True)
+    employee = models.ForeignKey('User', on_delete=models.CASCADE, related_name='leaves')
+    leave_type = models.CharField(max_length=4, choices=LEAVE_TYPE_CHOICES)
+    reason = models.CharField(max_length=200)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    total_days = models.PositiveIntegerField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    approved_by = models.ForeignKey('User', null=True, blank=True, on_delete=models.SET_NULL, related_name='approved_leaves')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def is_editable(self):
+        return self.status == 'pending'
+
+    def __str__(self):
+        return f"{self.employee} - {self.leave_type} ({self.start_date} to {self.end_date})"
+
+class LeaveQuota(models.Model):
+    LEAVE_TYPE_CHOICES = [
+        ('PL', 'Privilege Leave'),
+        ('CL', 'Casual Leave'),
+        ('SL', 'Sick Leave'),
+        ('LWP', 'Leave Without Pay'),
+    ]
+    quotaid = models.AutoField(primary_key=True)
+    employee = models.ForeignKey('User', on_delete=models.CASCADE, related_name='leave_quotas')
+    leave_type = models.CharField(max_length=4, choices=LEAVE_TYPE_CHOICES)
+    total_quota = models.FloatField()
+    used_quota = models.FloatField(default=0)
+    remain_quota = models.FloatField(default=0)
+
+    class Meta:
+        unique_together = ('employee', 'leave_type')
+
+    def __str__(self):
+        return f"{self.employee} - {self.leave_type} quota"

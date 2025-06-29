@@ -43,4 +43,11 @@ urlpatterns = [
     path('reviews/<int:pk>/edit/', views.review_update, name='review_update'),
     path('reviews/<int:pk>/delete/', views.review_delete, name='review_delete'),
     path('reviews/<int:pk>/', views.review_detail, name='review_detail'),
+    # Leave Management URLs
+    path('employee/leaves/', views.employee_leave_dashboard, name='employee_leave_dashboard'),
+    path('employee/leaves/apply/', views.apply_leave, name='apply_leave'),
+    path('employee/leaves/edit/<int:leave_id>/', views.edit_leave, name='edit_leave'),
+    path('leaves/admin/', views.admin_leave_dashboard, name='admin_leave_dashboard'),
+    path('leaves/admin/approve/<int:leave_id>/', views.approve_leave, name='approve_leave'),
+    path('leaves/admin/reject/<int:leave_id>/', views.reject_leave, name='reject_leave'),
 ]

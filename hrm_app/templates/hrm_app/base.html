@@ -44,7 +44,7 @@
 </head>
 <body>
 
-
+{% block nav %}
 <nav class="navbar navbar-expand-lg navbar-custom" style="height: 100px; ;">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="#">HRMS</a>
@@ -66,6 +66,23 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'task_dashboard' %}"><i class="bi bi-list-task"></i> Tasks</a>
         </li>
+        {% if user.is_authenticated %}
+          {% if user.is_employee %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'employee_leave_dashboard' %}"><i class="bi bi-calendar-check"></i> Leave</a>
+            </li>
+          {% elif user.is_superuser %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'admin_leave_dashboard' %}"><i class="bi bi-calendar-check"></i> Leave</a>
+            </li>
+          {% elif user.role %}
+            {% if user.role.role_name == 'Admin' or user.role.role_name == 'HR' %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'admin_leave_dashboard' %}"><i class="bi bi-calendar-check"></i> Leave</a>
+              </li>
+            {% endif %}
+          {% endif %}
+        {% endif %}
         <li class="nav-item">
           <a class="nav-link" href="{% url 'review_dashboard' %}"><i class="bi bi-bar-chart-line"></i> Performance Reviews</a>
         </li>
@@ -83,6 +100,7 @@
     </div>
   </div>
 </nav>
+{% endblock %} 
 
 
 <div class="container mt-3">

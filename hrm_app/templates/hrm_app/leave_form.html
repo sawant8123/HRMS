@@ -1,0 +1,39 @@
+{% extends 'hrm_app/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ title }}</h2>
+    <form method="post" class="mt-4" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.leave_type.label_tag }}
+            {{ form.leave_type }}
+            {% for error in form.leave_type.errors %}
+                <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.reason.label_tag }}
+            {{ form.reason }}
+            {% for error in form.reason.errors %}
+                <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.start_date.label_tag }}
+            {{ form.start_date }}
+            {% for error in form.start_date.errors %}
+                <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ form.end_date.label_tag }}
+            {{ form.end_date }}
+            {% for error in form.end_date.errors %}
+                <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">{{ title }}</button>
+        <a href="{% url 'employee_leave_dashboard' %}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %} 
